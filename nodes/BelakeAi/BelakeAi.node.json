@@ -1,0 +1,21 @@
+{
+	"node": "n8n-nodes-base.BelakeAi",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": [
+		"Miscellaneous"
+	],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://github.com/belakeaiservicos/belakeai-n8n-nodes/blob/main/credentials/README.md"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/belakeaiservicos/belakeai-n8n-nodes/blob/main/README.md"
+			}
+		]
+	}
+}
+
