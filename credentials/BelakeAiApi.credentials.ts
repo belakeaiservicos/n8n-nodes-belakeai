@@ -17,7 +17,7 @@ export class BelakeAiApi implements ICredentialType {
 	name = 'belakeAiApi';
 	displayName = 'Belake API';
 	icon: Icon = 'file:../icons/belake.svg';
-	documentationUrl = 'https://github.com/belakeaiservicos/belakeai-n8n-nodes/blob/main/credentials/README.md';
+	documentationUrl = 'https://github.com/belakeaiservicos/n8n-nodes-belakeai/blob/main/credentials/README.md';
 	properties: INodeProperties[] = [
 		{
 			displayName: 'Backend URL',
