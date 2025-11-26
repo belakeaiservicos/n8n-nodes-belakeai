@@ -1,4 +1,4 @@
-# belakeai-n8n-nodes
+# n8n-nodes-belakeai
 
 This is an n8n community node. It lets you use Belake.ai in your n8n workflows.
 

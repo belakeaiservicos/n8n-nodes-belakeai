@@ -8,12 +8,12 @@
 	"resources": {
 		"credentialDocumentation": [
 			{
-				"url": "https://github.com/belakeaiservicos/belakeai-n8n-nodes/blob/main/credentials/README.md"
+				"url": "https://github.com/belakeaiservicos/n8n-nodes-belakeai/blob/main/credentials/README.md"
 			}
 		],
 		"primaryDocumentation": [
 			{
-				"url": "https://github.com/belakeaiservicos/belakeai-n8n-nodes/blob/main/README.md"
+				"url": "https://github.com/belakeaiservicos/n8n-nodes-belakeai/blob/main/README.md"
 			}
 		]
 	}
