@@ -4,6 +4,7 @@ import type {
 	IHttpRequestOptions,
 	ICredentialDataDecryptedObject,
 	IHttpRequestMethods,
+	ICredentialTestRequest,
 	Icon,
 } from 'n8n-workflow';
 
@@ -40,19 +41,6 @@ export class BelakeAiApi implements ICredentialType {
 		},
 	];
 
-	test = {
-		request: {
-			baseURL: '={{$credentials.backendUrl}}',
-			url: '/login/api-key-auth',
-			method: 'POST' as IHttpRequestMethods,
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: {
-				apiKey: '={{$credentials.apiKey}}',
-			},
-		},
-	};
 
 	authenticate = async (
 		credentials: ICredentialDataDecryptedObject,
@@ -88,5 +76,19 @@ export class BelakeAiApi implements ICredentialType {
 		};
 
 		return requestOptions;
+	};
+
+	test: ICredentialTestRequest  = {
+		request: {
+			baseURL: '={{$credentials.backendUrl}}',
+			url: '/login/api-key-auth',
+			method: 'POST' as IHttpRequestMethods,
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: {
+				apiKey: '={{$credentials.apiKey}}',
+			},
+		},
 	};
 }
