@@ -1,4 +1,19 @@
-import { INodeType, INodeTypeDescription } from 'n8n-workflow';
+import {
+	IExecuteFunctions,
+	INodeExecutionData,
+	INodeType,
+	INodeTypeDescription,
+	IHttpRequestOptions,
+	IDataObject,
+	NodeConnectionTypes,
+	NodeOperationError,
+} from 'n8n-workflow';
+
+interface BelakeAuthResponse {
+	access_token?: string;
+	refresh_token?: string;
+	[k: string]: unknown;
+}
 
 export class BelakeAi implements INodeType {
 	description: INodeTypeDescription = {
@@ -13,8 +28,8 @@ export class BelakeAi implements INodeType {
 		defaults: {
 			name: 'Belake.ai',
 		},
-		inputs: ['main'],
-		outputs: ['main'],
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
 		// ===== AUTHENTICATION/CREDENTIALS =====
 		credentials: [
 			{
@@ -59,23 +74,11 @@ export class BelakeAi implements INodeType {
 						name: 'Get Agent by ID',
 						value: 'Get Agent by ID',
 						action: 'Get agent by id',
-						routing: {
-							request: {
-								method: 'GET',
-								url: '=/Agent/{{$parameter.agentId}}',
-							},
-						},
 					},
 					{
 						name: 'Get Agents',
 						value: 'Get Agents',
 						action: 'Get agents',
-						routing: {
-							request: {
-								method: 'GET',
-								url: '/Agent/availables',
-							},
-						},
 					},
 				],
 				default: 'Get Agents',
@@ -92,41 +95,16 @@ export class BelakeAi implements INodeType {
 						name: 'Get Chat by ID',
 						value: 'Get Chat by ID',
 						action: 'Get chat by id',
-						routing: {
-							request: {
-								method: 'GET',
-								url: '=/chat/{{$parameter.chatId}}',
-							},
-						},
 					},
 					{
 						name: 'Get Chats',
 						value: 'Get Chats',
 						action: 'Get chats',
-						routing: {
-							request: {
-								method: 'GET',
-								url: '/chat',
-							},
-						},
 					},
 					{
 						name: 'Send Message',
 						value: 'Send Message',
 						action: 'Send message',
-						routing: {
-							request: {
-								method: 'POST',
-								url: '/chat/agentchat',
-								body: {
-									agentsIds: '={{ $parameter["agentsIds"] }}',
-									message: '={{ $parameter["message"] }}',
-									language: '={{ $parameter["language"] }}',
-									chatId: '={{ $parameter["chatId"] }}',
-									hideChat: '={{ $parameter["hideChat"] }}',
-								},
-							},
-						},
 					},
 				],
 				default: 'Send Message',
@@ -143,23 +121,11 @@ export class BelakeAi implements INodeType {
 						name: 'Get Datasource by ID',
 						value: 'Get Datasource by ID',
 						action: 'Get datasource by id',
-						routing: {
-							request: {
-								method: 'GET',
-								url: '=/datasource/{{$parameter.datasourceId}}',
-							},
-						},
 					},
 					{
 						name: 'Get Datasources',
 						value: 'Get Datasources',
 						action: 'Get datasources',
-						routing: {
-							request: {
-								method: 'GET',
-								url: '/datasource/availables',
-							},
-						},
 					},
 				],
 				default: 'Get Datasources',
@@ -176,23 +142,11 @@ export class BelakeAi implements INodeType {
 						name: 'Get Department by ID',
 						value: 'Get Department by ID',
 						action: 'Get department by id',
-						routing: {
-							request: {
-								method: 'GET',
-								url: '=/Department/{{$parameter.departmentId}}',
-							},
-						},
 					},
 					{
 						name: 'Get Departments',
 						value: 'Get Departments',
 						action: 'Get departments',
-						routing: {
-							request: {
-								method: 'GET',
-								url: '/Department',
-							},
-						},
 					},
 				],
 				default: 'Get Departments',
@@ -209,23 +163,11 @@ export class BelakeAi implements INodeType {
 						name: 'Get Language Model by ID',
 						value: 'Get Language Model by ID',
 						action: 'Get language model by id',
-						routing: {
-							request: {
-								method: 'GET',
-								url: '=/languageModel/{{$parameter.languageModelId}}',
-							},
-						},
 					},
 					{
 						name: 'Get Language Models',
 						value: 'Get Language Models',
 						action: 'Get language models',
-						routing: {
-							request: {
-								method: 'GET',
-								url: '/languageModel/availables',
-							},
-						},
 					},
 				],
 				default: 'Get Language Models',
@@ -373,4 +315,133 @@ export class BelakeAi implements INodeType {
 		],
 		usableAsTool: true,
 	};
+
+	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+		const items = this.getInputData();
+		const returnData: INodeExecutionData[] = [];
+		
+		// Get credentials and obtain access token once
+		const credentials = await this.getCredentials('belakeAiApi');
+		const backendUrl = credentials.backendUrl as string;
+		const apiKey = credentials.apiKey as string;
+
+		// Get Bearer token using n8n's httpRequest helper
+		const authResponse = await this.helpers.httpRequest({
+			method: 'POST',
+			url: `${backendUrl}/login/api-key-auth`,
+			headers: { 'Content-Type': 'application/json' },
+			body: { apiKey },
+			json: true,
+		}) as BelakeAuthResponse;
+
+		const accessToken = authResponse.access_token;
+		if (!accessToken) {
+			throw new NodeOperationError(
+				this.getNode(),
+				`Failed to obtain access token. Response: ${JSON.stringify(authResponse)}`,
+			);
+		}
+
+		// Helper function to make authenticated requests
+		const makeRequest = async (options: IHttpRequestOptions) => {
+			return await this.helpers.httpRequest({
+				...options,
+				baseURL: backendUrl,
+				headers: {
+					'Content-Type': 'application/json',
+					Accept: 'application/json',
+					Authorization: `Bearer ${accessToken}`,
+					...options.headers,
+				},
+				json: true,
+			});
+		};
+
+		// Process each item using the declarative routing approach
+		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+			try {
+				const resource = this.getNodeParameter('resource', itemIndex) as string;
+				const operation = this.getNodeParameter('operation', itemIndex) as string;
+
+				// Map of all operations to their request configurations
+				const operationsMap: Record<string, Record<string, () => Promise<IDataObject>>> = {
+					chat: {
+						'Send Message': async () => makeRequest({
+							method: 'POST',
+							url: '/chat/agentchat',
+							body: {
+								agentsIds: this.getNodeParameter('agentsIds', itemIndex),
+								message: this.getNodeParameter('message', itemIndex),
+								language: this.getNodeParameter('language', itemIndex),
+								...(this.getNodeParameter('chatId', itemIndex, '') && { 
+									chatId: this.getNodeParameter('chatId', itemIndex) 
+								}),
+								hideChat: this.getNodeParameter('hideChat', itemIndex, false),
+							},
+						}),
+						'Get Chat by ID': async () => makeRequest({
+							method: 'GET',
+							url: `/chat/${this.getNodeParameter('chatId', itemIndex)}`,
+						}),
+						'Get Chats': async () => makeRequest({
+							method: 'GET',
+							url: '/chat',
+						}),
+					},
+					agent: {
+						'Get Agent by ID': async () => makeRequest({
+							method: 'GET',
+							url: `/Agent/${this.getNodeParameter('agentId', itemIndex)}`,
+						}),
+						'Get Agents': async () => makeRequest({
+							method: 'GET',
+							url: '/Agent/availables',
+						}),
+					},
+					datasource: {
+						'Get Datasource by ID': async () => makeRequest({
+							method: 'GET',
+							url: `/datasource/${this.getNodeParameter('datasourceId', itemIndex)}`,
+						}),
+						'Get Datasources': async () => makeRequest({
+							method: 'GET',
+							url: '/datasource/availables',
+						}),
+					},
+					department: {
+						'Get Department by ID': async () => makeRequest({
+							method: 'GET',
+							url: `/Department/${this.getNodeParameter('departmentId', itemIndex)}`,
+						}),
+						'Get Departments': async () => makeRequest({
+							method: 'GET',
+							url: '/Department',
+						}),
+					},
+					languageModel: {
+						'Get Language Model by ID': async () => makeRequest({
+							method: 'GET',
+							url: `/languageModel/${this.getNodeParameter('languageModelId', itemIndex)}`,
+						}),
+						'Get Language Models': async () => makeRequest({
+							method: 'GET',
+							url: '/languageModel/availables',
+						}),
+					},
+				};
+
+				// Execute the operation
+				const responseData = await operationsMap[resource][operation]();
+				returnData.push({ json: responseData });
+			} catch (error) {
+				if (this.continueOnFail()) {
+					returnData.push({ json: { error: error.message }, pairedItem: itemIndex });
+					continue;
+				}
+				throw error;
+			}
+		}
+
+		return [returnData];
+	}
 }

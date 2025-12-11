@@ -1,18 +1,11 @@
 import type {
 	ICredentialType,
 	INodeProperties,
-	IHttpRequestOptions,
-	ICredentialDataDecryptedObject,
-	IHttpRequestMethods,
+	IAuthenticateGeneric,
 	ICredentialTestRequest,
+	IHttpRequestMethods,
 	Icon,
 } from 'n8n-workflow';
-
-interface AuthResponse {
-	access_token?: string;
-	refresh_token?: string;
-	[k: string]: unknown;
-}
 
 export class BelakeAiApi implements ICredentialType {
 	name = 'belakeAiApi';
@@ -41,41 +34,14 @@ export class BelakeAiApi implements ICredentialType {
 		},
 	];
 
-
-	authenticate = async (
-		credentials: ICredentialDataDecryptedObject,
-		requestOptions: IHttpRequestOptions,
-	): Promise<IHttpRequestOptions> => {
-		const backendUrl = credentials.backendUrl as string;
-		
-		if (!backendUrl) {
-			throw new Error('Backend URL is required and must not be empty');
-		}
-		
-		const response = await fetch(`${backendUrl}/login/api-key-auth`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ apiKey: credentials.apiKey }),
-		});
-
-		if (!response.ok) {
-			throw new Error(`Authentication failed: ${response.statusText}`);
-		}
-
-		const data = (await response.json()) as AuthResponse;
-
-		const token = data.access_token;
-
-		if (!token) {
-			throw new Error(`Token not returned by API. Response: ${JSON.stringify(data)}`);
-		}
-
-		requestOptions.headers = {
-			...(requestOptions.headers || {}),
-			Authorization: `Bearer ${token}`,
-		};
-
-		return requestOptions;
+	// Return authentication headers without making the request directly
+	authenticate: IAuthenticateGeneric = {
+		type: 'generic',
+		properties: {
+			headers: {
+				'X-API-Key': '={{$credentials.apiKey}}',
+			},
+		},
 	};
 
 	test: ICredentialTestRequest  = {
