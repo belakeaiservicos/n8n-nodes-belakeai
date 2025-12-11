@@ -59,10 +59,22 @@ Fill in the required fields:
 
 ### Authentication Flow
 
-1. **Initial Request**: When you use the credentials, n8n sends your API key to the authentication endpoint (`POST /login/api-key-auth`)
-2. **Token Retrieval**: Belake.ai validates the API key and returns an access token
-3. **Bearer Token**: The access token is used as a Bearer token in the Authorization header for all subsequent requests
-4. **Automatic Refresh**: The authentication is handled automatically for each request
+The Belake.ai credentials follow n8n best practices by separating credential storage from authentication logic:
+
+1. **Credential Storage**: The credentials securely store your Backend URL and API Key without making any HTTP requests
+2. **Workflow Execution**: When a Belake.ai node executes in your workflow:
+   - The node retrieves the stored credentials
+   - Makes an authentication request to `POST /login/api-key-auth` using n8n's `httpRequest` helper
+   - Belake.ai validates the API key and returns an access token
+3. **Bearer Token Usage**: The access token is used as a Bearer token in the Authorization header for all subsequent API requests within that execution
+4. **Automatic Process**: This authentication flow is handled transparently on each workflow execution
+
+### Technical Details
+
+- **Credentials Class**: Returns authentication headers without making HTTP requests (n8n requirement)
+- **Node Execution**: Performs token exchange using `this.helpers.httpRequest()` at execution time
+- **Token Scope**: Access tokens are obtained per workflow execution, ensuring fresh authentication
+- **Security**: API keys are encrypted by n8n and never exposed in logs or responses
 
 ### Security Considerations
 
@@ -90,9 +102,12 @@ Possible causes:
 
 ### "Token not returned by API" Error
 
+This error occurs during workflow execution (not credential testing):
+
 - Backend returned an unexpected response format
 - Check backend status and logs
 - Verify API key permissions
+- Ensure the authentication endpoint `/login/api-key-auth` is accessible
 - Contact Belake.ai support if the issue persists
 
 ### Connection Issues
@@ -177,6 +192,39 @@ If you're working with multiple Belake.ai instances:
 - **n8n Community**: Visit the [n8n Community Forum](https://community.n8n.io/)
 - **Belake.ai Support**: Contact Belake.ai support for API-related issues
 
+## Architecture Notes
+
+### Why Credentials Don't Make HTTP Requests
+
+Following n8n's official guidelines, credential classes should:
+
+- ✅ Store authentication information securely
+- ✅ Return authentication headers declaratively
+- ❌ **NOT** make HTTP requests directly
+
+This design ensures:
+
+- **Performance**: Credentials are loaded once and reused
+- **Reliability**: No network dependencies during credential validation
+- **Compliance**: Meets n8n community node requirements for marketplace submission
+- **Maintainability**: Clear separation between credential storage and authentication logic
+
+### Implementation Details
+
+The authentication implementation uses:
+
+- **Credential Class** (`BelakeAiApi.credentials.ts`): Stores API key with `IAuthenticateGeneric` type
+- **Node Execution** (`BelakeAi.node.ts`): Contains `execute()` method that:
+  1. Retrieves credentials using `this.getCredentials()`
+  2. Exchanges API key for access token via `this.helpers.httpRequest()`
+  3. Uses token for all subsequent requests in that execution
+- **Operations Map**: Declarative structure mapping resources and operations to their API calls
+- **Type Safety**: Full TypeScript support with proper `IDataObject` typing
+
 ## Version History
 
+- **v1.0.2**: Refactored authentication to comply with n8n best practices
+  - Moved token exchange from credentials to node execution
+  - Implemented declarative operations map
+  - Enhanced type safety and error handling
 - **v1.0.0**: Initial implementation with API key authentication

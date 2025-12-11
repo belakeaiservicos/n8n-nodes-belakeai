@@ -61,9 +61,10 @@ To use this node, you need to authenticate with Belake.ai using API key authenti
 **API Key Authentication** - This node uses API key-based authentication where:
 
 * You provide your Backend URL and API Key in the credential configuration
-* The node automatically exchanges your API key for a bearer token
-* The bearer token is used for all subsequent API requests
-* Authentication is handled automatically on each request
+* The credentials securely store your API key (no HTTP requests are made at credential level)
+* When executing a workflow, the node automatically exchanges your API key for a bearer token using n8n's built-in HTTP helpers
+* The bearer token is then used for all subsequent API requests within that execution
+* Authentication is handled transparently on each workflow execution
 
 ### Setting Up Credentials
 
@@ -80,6 +81,14 @@ For detailed credential setup instructions, see the [credentials documentation](
 This node requires n8n version 1.0.0 or higher. It has been tested with n8n versions 1.0.0 and above.
 
 The node uses the n8n Nodes API version 1 with strict mode enabled.
+
+### Technical Implementation
+
+* **Credentials**: Store API key and backend URL without making HTTP requests (compliant with n8n best practices)
+* **Authentication**: Token exchange is performed at node execution time using `this.helpers.httpRequest()`
+* **Request Handling**: Declarative operations map with centralized authentication helper
+* **Type Safety**: Full TypeScript support with `IDataObject` types (no `any` types)
+* **Error Handling**: Proper error handling with support for "Continue on Fail" mode
 
 ## Usage
 
@@ -121,6 +130,16 @@ To retrieve information about available resources:
 * [Belake.ai API credentials documentation](credentials/README.md)
 
 ## Version history
+
+* **v1.0.2** - Architecture improvements (current)
+  * Refactored authentication to comply with n8n best practices
+  * Moved token exchange from credentials to node execution
+  * Implemented declarative operations map for cleaner code
+  * Enhanced type safety (removed `any` types)
+  * Improved error handling and code maintainability
+
+* **v1.0.1** - Repository updates
+  * Renamed repository references and added lint file
 
 * **v1.0.0** - First release
   * Support for Agent, Chat, Datasource, Department, and Language Model resources
