@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-belakeai",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"description": "n8n community node to integrate with Belake.ai API",
 	"license": "MIT",
 	"homepage": "https://www.belake.ai/",
