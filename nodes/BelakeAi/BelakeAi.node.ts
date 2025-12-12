@@ -37,14 +37,6 @@ export class BelakeAi implements INodeType {
 				required: true,
 			},
 		],
-		// ===== HTTP REQUEST DEFAULTS =====
-		requestDefaults: {
-			baseURL: '={{ $credentials.backendUrl }}',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-			},
-		},
 		properties: [
 			// ===== RESOURCE =====
 			{
