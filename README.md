@@ -2,7 +2,7 @@
 
 This is an n8n community node. It lets you use Belake.ai in your n8n workflows.
 
-Belake.ai is an AI platform that provides intelligent agents, chat interactions, data source management, department organization, and language model integration to enhance your automation workflows.
+Belake.ai is an AI platform that provides intelligent agents, chat interactions, data source management, group organization, language model integration, and workspace management to enhance your automation workflows.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
@@ -36,15 +36,20 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 * **Get Datasource by ID** - Retrieves detailed information about a specific datasource using its identifier
 * **Get Datasources** - Retrieves a list of all available datasources
 
-### Department
+### Group
 
-* **Get Department by ID** - Retrieves detailed information about a specific department using its identifier
-* **Get Departments** - Retrieves a list of all departments
+* **Get Group by ID** - Retrieves detailed information about a specific group using its identifier
+* **Get Groups** - Retrieves a list of all groups
 
 ### Language Model
 
 * **Get Language Model by ID** - Retrieves detailed information about a specific language model using its identifier
 * **Get Language Models** - Retrieves a list of all available language models
+
+### Workspace
+
+* **Get Workspace by ID** - Retrieves detailed information about a specific workspace using its identifier
+* **Get Workspaces** - Retrieves a list of all workspaces
 
 ## Credentials
 
@@ -53,7 +58,7 @@ To use this node, you need to authenticate with Belake.ai using API key authenti
 ### Prerequisites
 
 1. **Belake.ai Account**: You need an active Belake.ai account. If you don't have one, sign up at [https://www.belake.ai/](https://www.belake.ai/)
-2. **Backend URL**: Your Belake.ai backend instance URL (e.g., `https://[instance].belake.ai`)
+2. **Backend URL**: Your Belake.ai backend instance URL (e.g., `https://[instance].belake.ai`). All API routes use the `/v1` prefix automatically.
 3. **API Key**: Obtain your API key from the Belake.ai portal
 
 ### Authentication Method
@@ -112,9 +117,10 @@ A common use case is to send a message to AI agents and process the response:
 
 To retrieve information about available resources:
 
-1. Select the appropriate resource (Agent, Datasource, Department, or Language Model)
+1. Select the appropriate resource (Agent, Chat, Datasource, Group, Language Model, or Workspace)
 2. Choose **Get [Resource]s** to list all available items
 3. Use **Get [Resource] by ID** to retrieve specific item details using its identifier
+4. Many operations accept an optional **Workspace ID** to filter results by workspace
 
 ### Best Practices
 
@@ -131,7 +137,13 @@ To retrieve information about available resources:
 
 ## Version history
 
-* **v1.0.2** - Architecture improvements (current)
+* **v1.0.3** - API v1 routes and Workspace resource (current)
+  * Migrated all API endpoints to `/v1` prefix
+  * Replaced Department resource with Group resource
+  * Added Workspace resource with Get Workspace by ID and Get Workspaces operations
+  * Workspace ID field available across resources for filtering
+
+* **v1.0.2** - Architecture improvements
   * Refactored authentication to comply with n8n best practices
   * Moved token exchange from credentials to node execution
   * Implemented declarative operations map for cleaner code
