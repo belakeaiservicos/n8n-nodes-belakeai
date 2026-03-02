@@ -48,8 +48,9 @@ export class BelakeAi implements INodeType {
 				  { name: 'Agent', value: 'agent' },
 				  { name: 'Chat', value: 'chat' },
 				  { name: 'Datasource', value: 'datasource' },
-				  { name: 'Department', value: 'department' },
+				  { name: 'Group', value: 'group' },
 				  { name: 'Language Model', value: 'languageModel' },
+				  { name: 'Workspace', value: 'workspace' }
 				],
 				default: 'chat',
 			},
@@ -123,25 +124,25 @@ export class BelakeAi implements INodeType {
 				default: 'Get Datasources',
 			},
 			{
-				// ===== DEPARTMENTS OPERATIONS =====
+				// ===== GROUPS OPERATIONS =====
 				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
 				noDataExpression: true,
-				displayOptions: {show: { resource: ['department'],},},
+				displayOptions: {show: { resource: ['group'],},},
 				options: [
 					{
-						name: 'Get Department by ID',
-						value: 'Get Department by ID',
-						action: 'Get department by id',
+						name: 'Get Group by ID',
+						value: 'Get Group by ID',
+						action: 'Get group by id',
 					},
 					{
-						name: 'Get Departments',
-						value: 'Get Departments',
-						action: 'Get departments',
+						name: 'Get Groups',
+						value: 'Get Groups',
+						action: 'Get groups',
 					},
 				],
-				default: 'Get Departments',
+				default: 'Get Groups',
 			},
 			{
 				// ===== LANGUAGE MODELS OPERATIONS =====
@@ -163,6 +164,27 @@ export class BelakeAi implements INodeType {
 					},
 				],
 				default: 'Get Language Models',
+			},
+			{
+				// ===== WORKSPACES OPERATIONS =====
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				displayOptions: {show: { resource: ['workspace'],},},
+				options: [
+					{
+						name: 'Get Workspace by ID',
+						value: 'Get Workspace by ID',
+						action: 'Get workspace by id',
+					},
+					{
+						name: 'Get Workspaces',
+						value: 'Get Workspaces',
+						action: 'Get workspaces',
+					},
+				],
+				default: 'Get Workspaces',
 			},
 			// ===== FIELDS =====
 			{
@@ -207,33 +229,32 @@ export class BelakeAi implements INodeType {
 				},
 				description: 'Array of agent IDs',
 			},
-		{
-			displayName: 'Chat ID',
-			name: 'chatId',
-			type: 'string',
-			default: '',
-
-			displayOptions: {
-				show: {
-					operation: ['Send Message'],
+			{
+				displayName: 'Chat ID',
+				name: 'chatId',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						operation: ['Send Message'],
+					},
 				},
+				description: 'Optional chat identifier for message continuation',
 			},
-			description: 'Optional chat identifier for message continuation',
-		},
-		{
-			displayName: 'Chat ID',
-			name: 'chatId',
-			type: 'string',
-			default: '',
-			required: true,
-			displayOptions: {
-				show: {
-					resource: ['chat'],
-					operation: ['Get Chat by ID'],
+			{
+				displayName: 'Chat ID',
+				name: 'chatId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['chat'],
+						operation: ['Get Chat by ID'],
+					},
 				},
+				description: 'The chat identifier to retrieve',
 			},
-			description: 'The chat identifier to retrieve',
-		},
 			{
 				displayName: 'Hide Chat',
 				name: 'hideChat',
@@ -291,19 +312,42 @@ export class BelakeAi implements INodeType {
 				description: 'The agent identifier',
 			},
 			{
-				displayName: 'Department ID',
-				name: 'departmentId',
+				displayName: 'Group ID',
+				name: 'groupId',
 				type: 'string',
 				default: '',
 				required: true,
 				displayOptions: {
 					show: {
-						resource: ['department'],
-						operation: ['Get Department by ID'],
+						resource: ['group'],
+						operation: ['Get Group by ID'],
 					},
 				},
-				description: 'The department identifier',
+				description: 'The group identifier',
 			},
+			{
+				displayName: 'Workspace ID',
+				name: 'workspaceId',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['chat','agent','datasource','group','languageModel','workspace'],
+						operation: [
+							'Send Message',
+							'Get Chats',
+							'Get Agents',
+							'Get Datasources',
+							'Get Group by ID',
+							'Get Groups',
+							'Get Language Models',
+							'Get Language Model by ID',
+							'Get Workspace by ID',
+						],
+					},
+				},
+				description: 'The workspace identifier',
+			}
 		],
 		usableAsTool: true,
 	};
@@ -320,7 +364,7 @@ export class BelakeAi implements INodeType {
 		// Get Bearer token using n8n's httpRequest helper
 		const authResponse = await this.helpers.httpRequest({
 			method: 'POST',
-			url: `${backendUrl}/login/api-key-auth`,
+			url: `${backendUrl}/v1/login/api-key-auth`,
 			headers: { 'Content-Type': 'application/json' },
 			body: { apiKey },
 			json: true,
@@ -360,7 +404,7 @@ export class BelakeAi implements INodeType {
 					chat: {
 						'Send Message': async () => makeRequest({
 							method: 'POST',
-							url: '/chat/agentchat',
+							url: '/v1/chats/agentchat',
 							body: {
 								agentsIds: this.getNodeParameter('agentsIds', itemIndex),
 								message: this.getNodeParameter('message', itemIndex),
@@ -369,55 +413,87 @@ export class BelakeAi implements INodeType {
 									chatId: this.getNodeParameter('chatId', itemIndex) 
 								}),
 								hideChat: this.getNodeParameter('hideChat', itemIndex, false),
+								workspaceId: this.getNodeParameter('workspaceId', itemIndex)
 							},
 						}),
 						'Get Chat by ID': async () => makeRequest({
 							method: 'GET',
-							url: `/chat/${this.getNodeParameter('chatId', itemIndex)}`,
+							url: `/v1/chats/${this.getNodeParameter('chatId', itemIndex)}`,
 						}),
 						'Get Chats': async () => makeRequest({
 							method: 'GET',
-							url: '/chat',
+							url: '/v1/chats',
+							qs: {
+								workspaceId: this.getNodeParameter('workspaceId', itemIndex)
+							}
 						}),
 					},
 					agent: {
 						'Get Agent by ID': async () => makeRequest({
 							method: 'GET',
-							url: `/Agent/${this.getNodeParameter('agentId', itemIndex)}`,
+							url: `/v1/agents/${this.getNodeParameter('agentId', itemIndex)}`,
 						}),
 						'Get Agents': async () => makeRequest({
 							method: 'GET',
-							url: '/Agent/availables',
+							url: '/v1/agents/availables',
+							qs: {
+								workspaceId: this.getNodeParameter('workspaceId', itemIndex)
+							}
 						}),
 					},
 					datasource: {
 						'Get Datasource by ID': async () => makeRequest({
 							method: 'GET',
-							url: `/datasource/${this.getNodeParameter('datasourceId', itemIndex)}`,
+							url: `/v1/datasources/${this.getNodeParameter('datasourceId', itemIndex)}`,
 						}),
 						'Get Datasources': async () => makeRequest({
 							method: 'GET',
-							url: '/datasource/availables',
+							url: '/v1/datasources/availables',
+							qs: {
+								workspaceId: this.getNodeParameter('workspaceId', itemIndex)
+							}
 						}),
 					},
-					department: {
-						'Get Department by ID': async () => makeRequest({
+					group: {
+						'Get Group by ID': async () => makeRequest({
 							method: 'GET',
-							url: `/Department/${this.getNodeParameter('departmentId', itemIndex)}`,
+							url: `/v1/groups/${this.getNodeParameter('groupId', itemIndex)}`,
+							qs: {
+								workspaceId: this.getNodeParameter('workspaceId', itemIndex)
+							}
 						}),
-						'Get Departments': async () => makeRequest({
+						'Get Groups': async () => makeRequest({
 							method: 'GET',
-							url: '/Department',
+							url: '/v1/groups',
+							qs: {
+								workspaceId: this.getNodeParameter('workspaceId', itemIndex)
+							}
 						}),
 					},
 					languageModel: {
 						'Get Language Model by ID': async () => makeRequest({
 							method: 'GET',
-							url: `/languageModel/${this.getNodeParameter('languageModelId', itemIndex)}`,
+							url: `/v1/languageModels/${this.getNodeParameter('languageModelId', itemIndex)}`,
+							qs: {
+								workspaceId: this.getNodeParameter('workspaceId', itemIndex)
+							}
 						}),
 						'Get Language Models': async () => makeRequest({
 							method: 'GET',
-							url: '/languageModel/availables',
+							url: '/v1/languageModels/availables',
+							qs: {
+								workspaceId: this.getNodeParameter('workspaceId', itemIndex)
+							}
+						}),
+					},
+					workspace: {
+						'Get Workspace by ID': async () => makeRequest({
+							method: 'GET',
+							url: `/v1/workspaces/${this.getNodeParameter('workspaceId', itemIndex)}`,
+						}),
+						'Get Workspaces': async () => makeRequest({
+							method: 'GET',
+							url: '/v1/workspaces?page=1&pageSize=100',
 						}),
 					},
 				};
