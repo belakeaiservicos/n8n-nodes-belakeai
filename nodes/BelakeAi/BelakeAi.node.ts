@@ -370,7 +370,7 @@ export class BelakeAi implements INodeType {
 			json: true,
 		}) as BelakeAuthResponse;
 
-		const accessToken = authResponse.access_token;
+		const accessToken = authResponse.access_token_v2;
 		if (!accessToken) {
 			throw new NodeOperationError(
 				this.getNode(),
