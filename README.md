@@ -22,6 +22,8 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 
 ### Agent
 
+* **Create Agent** - Creates a new AI agent in a workspace. Supports full configuration including language model, display mode (`Apenas Eu` or `Grupos`), conditional group IDs, tools, web search, thinking level (`Mínimo`, `Baixo`, `Médio`, `Alto`), and optional datasource.
+* **Delete Agent by ID** - Deletes an agent by its identifier
 * **Get Agent by ID** - Retrieves detailed information about a specific agent using its identifier
 * **Get Agents** - Retrieves a list of all available agents
 
@@ -38,6 +40,8 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 
 ### Group
 
+* **Create Group** - Creates a new group in a workspace (requires name, optional description, and workspace ID)
+* **Delete Group** - Deletes a group from a workspace
 * **Get Group by ID** - Retrieves detailed information about a specific group using its identifier
 * **Get Groups** - Retrieves a list of all groups
 
@@ -48,8 +52,17 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 
 ### Workspace
 
+* **Create Workspace** - Creates a new workspace (requires name, optional description, and type `Sandbox`, `Trial`, or `Production`). The `menuConfig` is applied with all features enabled by default.
+* **Delete Workspace** - Deletes a workspace by its identifier
 * **Get Workspace by ID** - Retrieves detailed information about a specific workspace using its identifier
 * **Get Workspaces** - Retrieves a list of all workspaces
+* **Add User to Workspace** - Adds a single user to a workspace with a selectable role (`admin`, `member`, or `owner`)
+* **Add Members to Workspace** - Adds one or more users to a workspace as members (accepts a JSON array of user IDs; one request per user with `role: "member"`)
+* **Remove Users from Workspace** - Removes one or more users from a workspace (accepts a JSON array of user IDs; one request per user)
+* **Add Users to Groups** - Adds one or more users to one or more groups within a workspace (accepts JSON arrays of user IDs and group IDs; one request per user)
+* **Remove User from Group** - Removes one or more users from a specific group within a workspace (accepts a JSON array of user IDs; one request per user)
+
+> **Note:** Governance operations that receive a JSON array of user IDs will produce one output item per user ID processed.
 
 ## Credentials
 
@@ -137,7 +150,13 @@ To retrieve information about available resources:
 
 ## Version history
 
-* **v1.0.3** - API v1 routes and Workspace resource (current)
+* **v1.0.4** - Governance operations (current)
+  * Added Create Group and Delete Group operations to the Group resource
+  * Added four governance operations to the Workspace resource: Add Users to Workspace, Remove Users from Workspace, Add Users to Groups, and Remove User from Group
+  * User IDs are provided as a JSON array string; one request is issued per user, producing one output item per user processed
+  * Added JSON array validation with descriptive error messages for invalid inputs
+
+* **v1.0.3** - API v1 routes and Workspace resource
   * Migrated all API endpoints to `/v1` prefix
   * Replaced Department resource with Group resource
   * Added Workspace resource with Get Workspace by ID and Get Workspaces operations

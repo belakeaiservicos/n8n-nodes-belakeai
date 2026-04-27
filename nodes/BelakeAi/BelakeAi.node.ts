@@ -64,6 +64,16 @@ export class BelakeAi implements INodeType {
 				displayOptions: {show: { resource: ['agent'],},},
 				options: [
 					{
+						name: 'Create Agent',
+						value: 'Create Agent',
+						action: 'Create agent',
+					},
+					{
+						name: 'Delete Agent by ID',
+						value: 'Delete Agent by ID',
+						action: 'Delete agent by id',
+					},
+					{
 						name: 'Get Agent by ID',
 						value: 'Get Agent by ID',
 						action: 'Get agent by id',
@@ -132,6 +142,16 @@ export class BelakeAi implements INodeType {
 				displayOptions: {show: { resource: ['group'],},},
 				options: [
 					{
+						name: 'Create Group',
+						value: 'Create Group',
+						action: 'Create group',
+					},
+					{
+						name: 'Delete Group',
+						value: 'Delete Group',
+						action: 'Delete group',
+					},
+					{
 						name: 'Get Group by ID',
 						value: 'Get Group by ID',
 						action: 'Get group by id',
@@ -174,6 +194,31 @@ export class BelakeAi implements INodeType {
 				displayOptions: {show: { resource: ['workspace'],},},
 				options: [
 					{
+						name: 'Add Members to Workspace',
+						value: 'Add Members to Workspace',
+						action: 'Add members to workspace',
+					},
+					{
+						name: 'Add User to Workspace',
+						value: 'Add User to Workspace',
+						action: 'Add user to workspace',
+					},
+					{
+						name: 'Add Users to Groups',
+						value: 'Add Users to Groups',
+						action: 'Add users to groups',
+					},
+					{
+						name: 'Create Workspace',
+						value: 'Create Workspace',
+						action: 'Create workspace',
+					},
+					{
+						name: 'Delete Workspace',
+						value: 'Delete Workspace',
+						action: 'Delete workspace',
+					},
+					{
 						name: 'Get Workspace by ID',
 						value: 'Get Workspace by ID',
 						action: 'Get workspace by id',
@@ -182,6 +227,16 @@ export class BelakeAi implements INodeType {
 						name: 'Get Workspaces',
 						value: 'Get Workspaces',
 						action: 'Get workspaces',
+					},
+					{
+						name: 'Remove User From Group',
+						value: 'Remove User from Group',
+						action: 'Remove user from group',
+					},
+					{
+						name: 'Remove Users From Workspace',
+						value: 'Remove Users from Workspace',
+						action: 'Remove users from workspace',
 					},
 				],
 				default: 'Get Workspaces',
@@ -291,8 +346,8 @@ export class BelakeAi implements INodeType {
 				required: true,
 				displayOptions: {
 					show: {
-						resource: ['languageModel'],
-						operation: ['Get Language Model by ID'],
+						resource: ['languageModel', 'agent'],
+						operation: ['Get Language Model by ID', 'Create Agent'],
 					},
 				},
 				description: 'The language model identifier',
@@ -306,10 +361,165 @@ export class BelakeAi implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['agent'],
-						operation: ['Get Agent by ID'],
+						operation: ['Get Agent by ID', 'Delete Agent by ID'],
 					},
 				},
 				description: 'The agent identifier',
+			},
+			{
+				displayName: 'Agent Name',
+				name: 'agentName',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['agent'],
+						operation: ['Create Agent'],
+					},
+				},
+				description: 'The name of the agent to create',
+			},
+			{
+				displayName: 'Agent Description',
+				name: 'agentDescription',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['agent'],
+						operation: ['Create Agent'],
+					},
+				},
+				description: 'The description of the agent',
+			},
+			{
+				displayName: 'Prompt',
+				name: 'prompt',
+				type: 'string',
+				typeOptions: {
+					rows: 5,
+				},
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['agent'],
+						operation: ['Create Agent'],
+					},
+				},
+				description: 'The system prompt that guides the agent behavior',
+			},
+			{
+				displayName: 'Display Mode',
+				name: 'displayMode',
+				type: 'options',
+				default: 'me',
+				required: true,
+				options: [
+					{ name: 'Apenas Eu', value: 'me' },
+					{ name: 'Grupos', value: 'group' },
+				],
+				displayOptions: {
+					show: {
+						resource: ['agent'],
+						operation: ['Create Agent'],
+					},
+				},
+				description: 'Who can see this agent: only the creator or specific groups',
+			},
+			{
+				displayName: 'Group IDs',
+				name: 'departmentsIds',
+				type: 'string',
+				default: '',
+				required: true,
+				placeholder: '["id1","id2"]',
+				displayOptions: {
+					show: {
+						resource: ['agent'],
+						operation: ['Create Agent'],
+						displayMode: ['group'],
+					},
+				},
+				description: 'JSON array of group IDs that can see this agent',
+			},
+			{
+				displayName: 'Tools',
+				name: 'tools',
+				type: 'string',
+				default: '',
+				placeholder: '["id1","id2"]',
+				displayOptions: {
+					show: {
+						resource: ['agent'],
+						operation: ['Create Agent'],
+					},
+				},
+				description: 'Optional JSON array of tool IDs available to the agent',
+			},
+			{
+				displayName: 'Enable Web Search',
+				name: 'enableWebSearch',
+				type: 'boolean',
+				default: false,
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['agent'],
+						operation: ['Create Agent'],
+					},
+				},
+				description: 'Whether to enable web search for this agent',
+			},
+			{
+				displayName: 'Enable Thinking',
+				name: 'enableThinking',
+				type: 'boolean',
+				default: false,
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['agent'],
+						operation: ['Create Agent'],
+					},
+				},
+				description: 'Whether to enable reasoning/thinking for this agent',
+			},
+			{
+				displayName: 'Thinking Level',
+				name: 'thinkingLevel',
+				type: 'options',
+				default: 'low',
+				required: true,
+				options: [
+					{ name: 'Mínimo', value: 'minimal' },
+					{ name: 'Baixo', value: 'low' },
+					{ name: 'Médio', value: 'medium' },
+					{ name: 'Alto', value: 'high' },
+				],
+				displayOptions: {
+					show: {
+						resource: ['agent'],
+						operation: ['Create Agent'],
+						enableThinking: [true],
+					},
+				},
+				description: 'The reasoning level for the agent',
+			},
+			{
+				displayName: 'Datasource ID',
+				name: 'agentDatasourceId',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['agent'],
+						operation: ['Create Agent'],
+					},
+				},
+				description: 'Optional datasource identifier to attach to the agent',
 			},
 			{
 				displayName: 'Group ID',
@@ -319,11 +529,156 @@ export class BelakeAi implements INodeType {
 				required: true,
 				displayOptions: {
 					show: {
-						resource: ['group'],
-						operation: ['Get Group by ID'],
+						resource: ['group', 'workspace'],
+						operation: [
+							'Get Group by ID',
+							'Delete Group',
+							'Remove User from Group',
+						],
 					},
 				},
 				description: 'The group identifier',
+			},
+			{
+				displayName: 'Group Name',
+				name: 'name',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['group'],
+						operation: ['Create Group'],
+					},
+				},
+				description: 'The name of the group to create',
+			},
+			{
+				displayName: 'Group Description',
+				name: 'description',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['group'],
+						operation: ['Create Group'],
+					},
+				},
+				description: 'The description of the group to create',
+			},
+			{
+				displayName: 'User IDs',
+				name: 'userIds',
+				type: 'string',
+				default: '',
+				required: true,
+				placeholder: '["id1","id2"]',
+				displayOptions: {
+					show: {
+						resource: ['workspace'],
+						operation: [
+							'Add Members to Workspace',
+							'Remove Users from Workspace',
+							'Add Users to Groups',
+							'Remove User from Group',
+						],
+					},
+				},
+				description: 'JSON array of user IDs. One request will be made per user ID.',
+			},
+			{
+				displayName: 'User ID',
+				name: 'userId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['workspace'],
+						operation: ['Add User to Workspace'],
+					},
+				},
+				description: 'The user identifier to add to the workspace',
+			},
+			{
+				displayName: 'Role',
+				name: 'role',
+				type: 'options',
+				default: 'member',
+				required: true,
+				options: [
+					{ name: 'Admin', value: 'admin' },
+					{ name: 'Member', value: 'member' },
+					{ name: 'Owner', value: 'business_unit' },
+				],
+				displayOptions: {
+					show: {
+						resource: ['workspace'],
+						operation: ['Add User to Workspace'],
+					},
+				},
+				description: 'The role to assign to the user in the workspace',
+			},
+			{
+				displayName: 'Group IDs',
+				name: 'groupIds',
+				type: 'string',
+				default: '',
+				required: true,
+				placeholder: '["id1","id2"]',
+				displayOptions: {
+					show: {
+						resource: ['workspace'],
+						operation: ['Add Users to Groups'],
+					},
+				},
+				description: 'JSON array of group IDs to add each user to',
+			},
+			{
+				displayName: 'Workspace Name',
+				name: 'workspaceName',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['workspace'],
+						operation: ['Create Workspace'],
+					},
+				},
+				description: 'The name of the workspace to create',
+			},
+			{
+				displayName: 'Workspace Description',
+				name: 'workspaceDescription',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['workspace'],
+						operation: ['Create Workspace'],
+					},
+				},
+				description: 'The description of the workspace to create',
+			},
+			{
+				displayName: 'Workspace Type',
+				name: 'workspaceType',
+				type: 'options',
+				default: 'Sandbox',
+				required: true,
+				options: [
+					{ name: 'Sandbox', value: 'Sandbox' },
+					{ name: 'Trial', value: 'Trial' },
+					{ name: 'Production', value: 'Production' },
+				],
+				displayOptions: {
+					show: {
+						resource: ['workspace'],
+						operation: ['Create Workspace'],
+					},
+				},
+				description: 'The type of workspace to create',
 			},
 			{
 				displayName: 'Workspace ID',
@@ -337,12 +692,21 @@ export class BelakeAi implements INodeType {
 							'Send Message',
 							'Get Chats',
 							'Get Agents',
+							'Create Agent',
 							'Get Datasources',
 							'Get Group by ID',
 							'Get Groups',
+							'Create Group',
+							'Delete Group',
 							'Get Language Models',
 							'Get Language Model by ID',
 							'Get Workspace by ID',
+							'Delete Workspace',
+							'Add User to Workspace',
+							'Add Members to Workspace',
+							'Remove Users from Workspace',
+							'Add Users to Groups',
+							'Remove User from Group',
 						],
 					},
 				},
@@ -393,6 +757,20 @@ export class BelakeAi implements INodeType {
 			});
 		};
 
+		// Parse a JSON-array string field into a string[] with a clear error message
+		const parseIdArray = (raw: string, fieldName: string): string[] => {
+			try {
+				const parsed = JSON.parse(raw);
+				if (!Array.isArray(parsed)) throw new NodeOperationError(this.getNode(), 'not an array');
+				return parsed.map((v) => String(v));
+			} catch {
+				throw new NodeOperationError(
+					this.getNode(),
+					`${fieldName} must be a JSON array, e.g. ["id1","id2"]`,
+				);
+			}
+		};
+
 		// Process each item using the declarative routing approach
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			try {
@@ -400,7 +778,7 @@ export class BelakeAi implements INodeType {
 				const operation = this.getNodeParameter('operation', itemIndex) as string;
 
 				// Map of all operations to their request configurations
-				const operationsMap: Record<string, Record<string, () => Promise<IDataObject>>> = {
+				const operationsMap: Record<string, Record<string, () => Promise<IDataObject | IDataObject[]>>> = {
 					chat: {
 						'Send Message': async () => makeRequest({
 							method: 'POST',
@@ -433,6 +811,10 @@ export class BelakeAi implements INodeType {
 							method: 'GET',
 							url: `/v1/agents/${this.getNodeParameter('agentId', itemIndex)}`,
 						}),
+						'Delete Agent by ID': async () => makeRequest({
+							method: 'DELETE',
+							url: `/v1/agents/${this.getNodeParameter('agentId', itemIndex)}`,
+						}),
 						'Get Agents': async () => makeRequest({
 							method: 'GET',
 							url: '/v1/agents/availables',
@@ -440,6 +822,53 @@ export class BelakeAi implements INodeType {
 								workspaceId: this.getNodeParameter('workspaceId', itemIndex)
 							}
 						}),
+						'Create Agent': async () => {
+							const workspaceId = this.getNodeParameter('workspaceId', itemIndex) as string;
+							const displayMode = this.getNodeParameter('displayMode', itemIndex) as string;
+							const enableThinking = this.getNodeParameter('enableThinking', itemIndex) as boolean;
+							const toolsRaw = this.getNodeParameter('tools', itemIndex, '') as string;
+							const datasourceId = this.getNodeParameter('agentDatasourceId', itemIndex, '') as string;
+
+							const departmentsIds = displayMode === 'group'
+								? parseIdArray(
+									this.getNodeParameter('departmentsIds', itemIndex) as string,
+									'Group IDs',
+								)
+								: [];
+
+							const tools = toolsRaw ? parseIdArray(toolsRaw, 'Tools') : [];
+
+							const body: IDataObject = {
+								name: this.getNodeParameter('agentName', itemIndex),
+								description: this.getNodeParameter('agentDescription', itemIndex),
+								prompt: this.getNodeParameter('prompt', itemIndex),
+								languageModelId: this.getNodeParameter('languageModelId', itemIndex),
+								displayMode,
+								departmentsIds,
+								tools,
+								enableWebSearch: this.getNodeParameter('enableWebSearch', itemIndex),
+								enableThinking,
+								thinkingLevel: enableThinking
+									? this.getNodeParameter('thinkingLevel', itemIndex)
+									: null,
+								filesIds: [],
+								foldersIds: [],
+								isDraft: false,
+								workspace: workspaceId,
+								workspaceId,
+							};
+
+							if (datasourceId) {
+								body.datasourceId = datasourceId;
+							}
+
+							return await makeRequest({
+								method: 'POST',
+								url: '/v1/agents',
+								qs: { workspaceId },
+								body,
+							});
+						},
 					},
 					datasource: {
 						'Get Datasource by ID': async () => makeRequest({
@@ -469,6 +898,22 @@ export class BelakeAi implements INodeType {
 								workspaceId: this.getNodeParameter('workspaceId', itemIndex)
 							}
 						}),
+						'Create Group': async () => makeRequest({
+							method: 'POST',
+							url: '/v1/groups',
+							body: {
+								name: this.getNodeParameter('name', itemIndex),
+								description: this.getNodeParameter('description', itemIndex, ''),
+								workspaceId: this.getNodeParameter('workspaceId', itemIndex),
+							},
+						}),
+						'Delete Group': async () => makeRequest({
+							method: 'DELETE',
+							url: `/v1/groups/${this.getNodeParameter('groupId', itemIndex)}`,
+							qs: {
+								workspaceId: this.getNodeParameter('workspaceId', itemIndex),
+							},
+						}),
 					},
 					languageModel: {
 						'Get Language Model by ID': async () => makeRequest({
@@ -495,12 +940,120 @@ export class BelakeAi implements INodeType {
 							method: 'GET',
 							url: '/v1/workspaces?page=1&pageSize=100',
 						}),
+						'Create Workspace': async () => makeRequest({
+							method: 'POST',
+							url: '/v1/workspaces',
+							body: {
+								name: this.getNodeParameter('workspaceName', itemIndex),
+								description: this.getNodeParameter('workspaceDescription', itemIndex, ''),
+								type: this.getNodeParameter('workspaceType', itemIndex),
+								menuConfig: {
+									newChat: true,
+									myAgents: true,
+									belakeBuilder: true,
+									reports: true,
+									documents: true,
+									advanced: true,
+								},
+							},
+						}),
+						'Delete Workspace': async () => makeRequest({
+							method: 'DELETE',
+							url: `/v1/workspaces/${this.getNodeParameter('workspaceId', itemIndex)}`,
+						}),
+						'Add User to Workspace': async () => {
+							const workspaceId = this.getNodeParameter('workspaceId', itemIndex) as string;
+							const userId = this.getNodeParameter('userId', itemIndex) as string;
+							const role = this.getNodeParameter('role', itemIndex) as string;
+							return await makeRequest({
+								method: 'POST',
+								url: `/v1/workspaces/${workspaceId}/users`,
+								body: { userId, role },
+							});
+						},
+						'Add Members to Workspace': async () => {
+							const workspaceId = this.getNodeParameter('workspaceId', itemIndex) as string;
+							const userIds = parseIdArray(
+								this.getNodeParameter('userIds', itemIndex) as string,
+								'User IDs',
+							);
+							const results: IDataObject[] = [];
+							for (const userId of userIds) {
+								const response = await makeRequest({
+									method: 'POST',
+									url: `/v1/workspaces/${workspaceId}/users`,
+									body: { userId, role: 'member' },
+								});
+								results.push({ userId, response });
+							}
+							return results;
+						},
+						'Remove Users from Workspace': async () => {
+							const workspaceId = this.getNodeParameter('workspaceId', itemIndex) as string;
+							const userIds = parseIdArray(
+								this.getNodeParameter('userIds', itemIndex) as string,
+								'User IDs',
+							);
+							const results: IDataObject[] = [];
+							for (const userId of userIds) {
+								const response = await makeRequest({
+									method: 'DELETE',
+									url: `/v1/workspaces/${workspaceId}/users/${userId}`,
+								});
+								results.push({ userId, response });
+							}
+							return results;
+						},
+						'Add Users to Groups': async () => {
+							const workspaceId = this.getNodeParameter('workspaceId', itemIndex) as string;
+							const userIds = parseIdArray(
+								this.getNodeParameter('userIds', itemIndex) as string,
+								'User IDs',
+							);
+							const groupIds = parseIdArray(
+								this.getNodeParameter('groupIds', itemIndex) as string,
+								'Group IDs',
+							);
+							const results: IDataObject[] = [];
+							for (const userId of userIds) {
+								const response = await makeRequest({
+									method: 'POST',
+									url: `/v1/workspaces/${workspaceId}/users/${userId}/groups`,
+									body: { groupIds },
+								});
+								results.push({ userId, response });
+							}
+							return results;
+						},
+						'Remove User from Group': async () => {
+							const workspaceId = this.getNodeParameter('workspaceId', itemIndex) as string;
+							const groupId = this.getNodeParameter('groupId', itemIndex) as string;
+							const userIds = parseIdArray(
+								this.getNodeParameter('userIds', itemIndex) as string,
+								'User IDs',
+							);
+							const results: IDataObject[] = [];
+							for (const userId of userIds) {
+								const response = await makeRequest({
+									method: 'DELETE',
+									url: `/v1/workspaces/${workspaceId}/users/${userId}/groups/${groupId}`,
+								});
+								results.push({ userId, response });
+							}
+							return results;
+						},
 					},
 				};
 
 				// Execute the operation
 				const responseData = await operationsMap[resource][operation]();
-				returnData.push({ json: responseData });
+				if (Array.isArray(responseData)) {
+					for (const entry of responseData) {
+						returnData.push({ json: entry, pairedItem: itemIndex });
+					}
+				} else {
+					returnData.push({ json: responseData, pairedItem: itemIndex });
+				}
 			} catch (error) {
 				if (this.continueOnFail()) {
 					returnData.push({ json: { error: error.message }, pairedItem: itemIndex });
