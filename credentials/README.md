@@ -59,22 +59,23 @@ Fill in the required fields:
 
 ### Authentication Flow
 
-The Belake.ai credentials follow n8n best practices by separating credential storage from authentication logic:
+The Belake.ai credentials follow n8n best practices by separating credential **storage** from runtime authentication:
 
-1. **Credential Storage**: The credentials securely store your Backend URL and API Key without making any HTTP requests
-2. **Workflow Execution**: When a Belake.ai node executes in your workflow:
-   - The node retrieves the stored credentials
-   - Makes an authentication request to `POST /login/api-key-auth` using n8n's `httpRequest` helper
-   - Belake.ai validates the API key and returns an access token
-3. **Bearer Token Usage**: The access token is used as a Bearer token in the Authorization header for all subsequent API requests within that execution
-4. **Automatic Process**: This authentication flow is handled transparently on each workflow execution
+1. **Credential Storage**: The credentials class declaratively returns the `X-API-Key` header — it does not make HTTP requests during storage or retrieval.
+2. **Credential Test**: Clicking **Test** issues a single `POST /login/api-key-auth` request to validate that your API Key + Backend URL combination is reachable and accepted by Belake.ai.
+3. **Workflow Execution**: When a Belake.ai node runs:
+   - It retrieves the stored credentials.
+   - Exchanges your API key for a short-lived access token via `POST /login/api-key-auth` using `this.helpers.httpRequest()`.
+   - Belake.ai validates the API key and returns the access token.
+4. **Bearer Token Usage**: The access token is attached as `Authorization: Bearer …` to every subsequent API call within that execution.
+5. **Automatic Process**: This entire flow is transparent — you only configure the Backend URL and API Key once.
 
 ### Technical Details
 
-- **Credentials Class**: Returns authentication headers without making HTTP requests (n8n requirement)
-- **Node Execution**: Performs token exchange using `this.helpers.httpRequest()` at execution time
-- **Token Scope**: Access tokens are obtained per workflow execution, ensuring fresh authentication
-- **Security**: API keys are encrypted by n8n and never exposed in logs or responses
+- **Credentials Class**: Declaratively returns auth headers and exposes a `test` request for validation (`ICredentialTestRequest`).
+- **Node Execution**: Performs the token exchange at runtime through `this.helpers.httpRequest()`.
+- **Token Scope**: Access tokens are obtained per workflow execution to guarantee freshness.
+- **Security**: API keys are encrypted by n8n and never exposed in logs, responses, or workflow exports.
 
 ### Security Considerations
 
@@ -176,8 +177,6 @@ Once configured, select your credential from the dropdown in any Belake.ai node:
 4. Configure the operation-specific fields
 5. Execute the workflow
 
-Tip: For chat workflows, reuse the same **Chat ID** to maintain conversation context across messages.
-
 ### Multiple Instances
 
 If you're working with multiple Belake.ai instances:
@@ -223,8 +222,4 @@ The authentication implementation uses:
 
 ## Version History
 
-- **v1.0.2**: Refactored authentication to comply with n8n best practices
-  - Moved token exchange from credentials to node execution
-  - Implemented declarative operations map
-  - Enhanced type safety and error handling
-- **v1.0.0**: Initial implementation with API key authentication
+The credential implementation follows the same release cycle as the node. See the project [CHANGELOG](../CHANGELOG.md) and the [Version history section in the main README](../README.md#version-history) for the full history.
