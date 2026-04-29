@@ -9,12 +9,6 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 
-interface BelakeAuthResponse {
-	access_token?: string;
-	refresh_token?: string;
-	[k: string]: unknown;
-}
-
 export class BelakeAi implements INodeType {
 	description: INodeTypeDescription = {
 		// ===== METADATA =====
@@ -514,8 +508,8 @@ export class BelakeAi implements INodeType {
 				default: 'me',
 				required: true,
 				options: [
-					{ name: 'Apenas Eu', value: 'me' },
-					{ name: 'Grupos', value: 'group' },
+					{ name: 'Only Me', value: 'me' },
+					{ name: 'Groups', value: 'group' },
 				],
 				displayOptions: {
 					show: {
@@ -590,10 +584,10 @@ export class BelakeAi implements INodeType {
 				default: 'low',
 				required: true,
 				options: [
-					{ name: 'Mínimo', value: 'minimal' },
-					{ name: 'Baixo', value: 'low' },
-					{ name: 'Médio', value: 'medium' },
-					{ name: 'Alto', value: 'high' },
+					{ name: 'Minimal', value: 'minimal' },
+					{ name: 'Low', value: 'low' },
+					{ name: 'Medium', value: 'medium' },
+					{ name: 'High', value: 'high' },
 				],
 				displayOptions: {
 					show: {
@@ -817,8 +811,8 @@ export class BelakeAi implements INodeType {
 				default: 'DEFAULT',
 				required: true,
 				options: [
-					{ name: 'Email E Senha', value: 'DEFAULT' },
 					{ name: 'Azure AD', value: 'AZUREAD' },
+					{ name: 'Email and Password', value: 'DEFAULT' },
 				],
 				displayOptions: {
 					show: {
@@ -844,7 +838,7 @@ export class BelakeAi implements INodeType {
 						loginType: ['DEFAULT'],
 					},
 				},
-				description: 'The password for the user (only required when login type is Email e Senha)',
+				description: 'The password for the user (only required when login type is Email and Password)',
 			},
 			{
 				displayName: 'Global Role',
@@ -1611,8 +1605,8 @@ export class BelakeAi implements INodeType {
 						type: 'options',
 						default: 'me',
 						options: [
-							{ name: 'Apenas Eu', value: 'me' },
-							{ name: 'Grupos', value: 'group' },
+							{ name: 'Only Me', value: 'me' },
+							{ name: 'Groups', value: 'group' },
 						],
 						description: 'Who can see this agent',
 					},
@@ -1636,7 +1630,7 @@ export class BelakeAi implements INodeType {
 						type: 'string',
 						default: '',
 						placeholder: '["id1","id2"]',
-						description: 'JSON array of group IDs (only relevant when Display Mode is Grupos). Pass [] to clear.',
+						description: 'JSON array of group IDs (only relevant when Display Mode is Groups). Pass [] to clear.',
 					},
 					{
 						displayName: 'Language Model ID',
@@ -1668,10 +1662,10 @@ export class BelakeAi implements INodeType {
 						type: 'options',
 						default: 'low',
 						options: [
-							{ name: 'Mínimo', value: 'minimal' },
-							{ name: 'Baixo', value: 'low' },
-							{ name: 'Médio', value: 'medium' },
-							{ name: 'Alto', value: 'high' },
+							{ name: 'Minimal', value: 'minimal' },
+							{ name: 'Low', value: 'low' },
+							{ name: 'Medium', value: 'medium' },
+							{ name: 'High', value: 'high' },
 						],
 						displayOptions: {
 							show: {
@@ -2167,38 +2161,20 @@ export class BelakeAi implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
-		
-		// Get credentials and obtain access token once
+
+		// Backend URL is the only piece of credential data the node reads directly;
+		// authentication (API key → bearer token exchange) is delegated to the
+		// credential's preAuthentication and httpRequestWithAuthentication.
 		const credentials = await this.getCredentials('belakeAiApi');
 		const backendUrl = credentials.backendUrl as string;
-		const apiKey = credentials.apiKey as string;
 
-		// Get Bearer token using n8n's httpRequest helper
-		const authResponse = await this.helpers.httpRequest({
-			method: 'POST',
-			url: `${backendUrl}/v1/login/api-key-auth`,
-			headers: { 'Content-Type': 'application/json' },
-			body: { apiKey },
-			json: true,
-		}) as BelakeAuthResponse;
-
-		const accessToken = authResponse.access_token_v2;
-		if (!accessToken) {
-			throw new NodeOperationError(
-				this.getNode(),
-				`Failed to obtain access token. Response: ${JSON.stringify(authResponse)}`,
-			);
-		}
-
-		// Helper function to make authenticated requests
 		const makeRequest = async (options: IHttpRequestOptions) => {
-			return await this.helpers.httpRequest({
+			return await this.helpers.httpRequestWithAuthentication.call(this, 'belakeAiApi', {
 				...options,
 				baseURL: backendUrl,
 				headers: {
 					'Content-Type': 'application/json',
 					Accept: 'application/json',
-					Authorization: `Bearer ${accessToken}`,
 					...options.headers,
 				},
 				json: true,
