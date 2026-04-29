@@ -1,0 +1,17 @@
+{
+  "npm": {
+    "publish": false
+  },
+  "git": {
+    "tagName": "${version}",
+    "commitMessage": "Release ${version}",
+    "requireCleanWorkingDir": true,
+    "push": true
+  },
+  "github": {
+    "release": false
+  },
+  "hooks": {
+    "after:bump": "echo \"Tag ${version} will be pushed; GitHub Actions will publish to npm with provenance.\""
+  }
+}
